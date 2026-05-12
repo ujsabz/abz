@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABZ — VIVA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #185FA5;
+    --primary-dark: #0C447C;
+    --green: #3B6D11;
+    --green-bg: #E1F5EE;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --orange: #BA7517;
+    --orange-bg: #FAEEDA;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.2);
+    --bg: #F5F5F3;
+    --surface: #FFFFFF;
+    --surface2: #F1F0ED;
+    --text: #1A1A18;
+    --text2: #6B6B67;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .app-header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .app-title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .app-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .page-wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 32px; }
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+  label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 4px; margin-top: 12px; }
+  label:first-child { margin-top: 0; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 18px; border-radius: var(--radius); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .btn:hover { background: var(--surface2); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+  .btn-ink { background: #1A1A18; color: #fff; border-color: #1A1A18; }
+  .btn-ink:hover { background: #333; }
+  .btn-danger { background: var(--red-bg); color: var(--red); border-color: #F09595; }
+  .btn-danger:hover { background: #F7C1C1; }
+  .btn-sm { padding: 7px 13px; font-size: 13px; }
+  .btn-full { width: 100%; }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text2); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; margin-bottom: 18px; }
+  .back-btn:hover { color: var(--text); }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-green { background: var(--green); }
+  .dot-red { background: var(--red); }
+  .dot-orange { background: var(--orange); }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .tag-volunteer { background: var(--green-bg); color: var(--green); }
+  .tag-staff { background: #E6F1FB; color: var(--primary); }
+  .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; position: sticky; top: 53px; z-index: 90; background: var(--bg); padding: 10px 0 8px; margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; border-bottom: 0.5px solid var(--border); }
+  .date-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; flex: 1; -webkit-overflow-scrolling: touch; }
+  .date-scroll::-webkit-scrollbar { height: 3px; }
+  .date-scroll::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
+  .date-chip { padding: 7px 13px; border-radius: 20px; font-size: 13px; border: 0.5px solid var(--border); cursor: pointer; background: var(--surface); color: var(--text); white-space: nowrap; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .date-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 500; }
+  .filter-row { display: flex; gap: 7px; margin-bottom: 12px; flex-wrap: wrap; }
+  .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 0.5px solid var(--border-md); cursor: pointer; background: var(--surface); color: var(--text2); font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: var(--surface2); border-radius: var(--radius); padding: 13px; text-align: center; }
+  .stat-num { font-size: 24px; font-weight: 600; color: var(--text); }
+  .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .rp-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: all 0.1s; }
+  .rp-row:last-child { border-bottom: none; }
+  .rp-row:hover { background: var(--surface2); margin: 0 -18px; padding-left: 18px; padding-right: 18px; }
+  .rp-name { font-size: 14px; font-weight: 500; }
+  .rp-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .rp-row-manage { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 0.5px solid var(--border); }
+  .rp-row-manage:last-child { border-bottom: none; }
+  .week-dots { display: flex; gap: 5px; margin-top: 5px; }
+  .week-day { font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .week-day-active { background: var(--green-bg); color: var(--green); }
+  .week-day-inactive { background: var(--surface2); color: var(--text2); opacity: 0.5; }
+  .week-day-today { outline: 1.5px solid var(--primary); outline-offset: 1px; }
+  .slot-block { border: 0.5px solid var(--border); border-radius: var(--radius); padding: 11px 12px; margin-bottom: 9px; position: relative; background: var(--surface); }
+  .slot-occupied { border-left: 3px solid var(--red); border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .slot-available { border-left: 3px solid var(--green); border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .slot-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 7px; }
+  .slot-label-red { color: var(--red); }
+  .slot-label-green { color: var(--green); }
+  .remove-slot-btn { position: absolute; top: 8px; right: 8px; background: var(--surface2); border: none; cursor: pointer; color: var(--text2); font-size: 16px; padding: 2px 6px; border-radius: 6px; line-height: 1.4; }
+  .remove-slot-btn:hover { background: var(--red-bg); color: var(--red); }
+  .hq-req-box { background: var(--orange-bg); border: 0.5px solid #EF9F27; border-radius: var(--radius); padding: 13px; margin-bottom: 8px; }
+  .hq-req-box-title { font-size: 12px; font-weight: 600; color: #633806; margin-bottom: 5px; }
+  .hq-req-box-text { font-size: 14px; color: #412402; line-height: 1.5; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 13px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); font-weight: 500; }
+  .success-msg { color: var(--green); font-size: 13px; margin-top: 9px; padding: 9px 12px; background: var(--green-bg); border-radius: var(--radius); }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 9px; }
+  .empty-state { text-align: center; padding: 28px 16px; color: var(--text2); font-size: 14px; }
+  .search-wrap { position: relative; margin-bottom: 13px; }
+  .search-wrap input { padding-left: 36px; }
+  .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text2); pointer-events: none; }
+  .slot-collapsed { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:0.5px solid var(--border); border-left:3px solid var(--red); border-radius:var(--radius); margin-bottom:9px; background:var(--surface); }
+  .slot-collapsed-text { font-size:14px; font-weight:500; color:var(--text); }
+  .slot-collapsed-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+  .edit-icon { font-size:16px; cursor:pointer; flex-shrink:0; padding:4px; }
+  .task-num-bold { font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .task-response-collapsed { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:var(--surface2); border:0.5px solid var(--border); border-radius:var(--radius); margin-top:8px; cursor:pointer; }
+  .task-response-preview { font-size:13px; color:var(--text2); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:85%; }
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.88); z-index: 999; align-items: center; justify-content: center; flex-direction: column; gap: 12px; font-size: 14px; color: var(--text2); font-weight: 500; }
+  .loading-overlay.show { display: flex; }
+  .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .landing-logo { text-align: center; margin-bottom: 28px; padding-top: 12px; }
+  .landing-logo-title { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; }
+  .landing-logo-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+  .entry-card-icon { font-size: 22px; margin-bottom: 6px; }
+  .entry-card-title { font-size: 16px; font-weight: 600; margin-bottom: 5px; }
+  .entry-card-sub { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.4; }
+  .chevron { font-size: 16px; color: var(--text2); }
+  /* TASK CARDS - HQ side */
+  .task-card { border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; background: var(--surface); position: relative; }
+  .task-card-sent { border-left: 3px solid var(--red); border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .task-card-responded { border-left: 3px solid var(--orange); border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .task-num { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); margin-bottom: 8px; }
+  .task-response-box { background: var(--orange-bg); border: 0.5px solid #EF9F27; border-radius: var(--radius); padding: 10px 12px; margin-top: 10px; }
+  .task-response-title { font-size: 11px; font-weight: 600; color: #633806; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .task-waiting { font-size: 13px; color: var(--text2); margin-top: 8px; padding: 8px 11px; background: var(--surface2); border-radius: var(--radius); display: flex; align-items: center; gap: 7px; }
+  /* TASK CARDS - RP side */
+  .rp-task-card { background: var(--orange-bg); border: 0.5px solid #EF9F27; border-radius: var(--radius); padding: 13px; margin-bottom: 12px; }
+  .rp-task-num { font-size: 11px; font-weight: 600; color: #633806; margin-bottom: 5px; }
+  .rp-task-text { font-size: 14px; color: #412402; line-height: 1.5; margin-bottom: 10px; white-space: pre-wrap; }
+  .rp-task-response-area textarea { background: var(--surface); }
+  .login-wrap { max-width: 380px; margin: 0 auto; }
+  .login-hero { background: #1A1A18; border-radius: var(--radius-lg); padding: 26px 22px; margin-bottom: 18px; text-align: center; }
+  .login-hero-title { font-size: 22px; font-weight: 600; color: #fff; }
+  .login-hero-sub { font-size: 13px; color: #aaa; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div id="loading-text">Loading...</div>
+</div>
+
+<!-- LANDING -->
+<div id="screen-landing" class="screen active">
+  <div class="page-wrap">
+    <div class="landing-logo">
+      <div class="landing-logo-title">ABZ</div>
+      <div class="landing-logo-sub">RP Schedule Manager · VIVA</div>
+    </div>
+    <div class="card" style="margin-bottom:12px; cursor:pointer;" onclick="showScreen('screen-rp-login')">
+      <div class="entry-card-icon">👤</div>
+      <div class="entry-card-title">I am an RP</div>
+      <div class="entry-card-sub">Fill in your schedule and respond to HQ tasks</div>
+      <button class="btn btn-primary btn-full">Enter as RP</button>
+    </div>
+    <div class="card" style="cursor:pointer;" onclick="showScreen('screen-hq-login')">
+      <div class="entry-card-icon">🏢</div>
+      <div class="entry-card-title">I am from HQ</div>
+      <div class="entry-card-sub">View all RP schedules and assign tasks</div>
+      <button class="btn btn-full">Enter as HQ</button>
+    </div>
+  </div>
+</div>
+
+<!-- RP LOGIN -->
+<div id="screen-rp-login" class="screen">
+  <div class="page-wrap">
+    <button class="back-btn" onclick="showScreen('screen-landing')">← Back</button>
+    <div class="login-wrap">
+      <div class="login-hero">
+        <div class="login-hero-title">Select Your Name</div>
+        <div class="login-hero-sub">Choose your name from the list below</div>
+      </div>
+      <div class="card">
+        <label>Your name</label>
+        <select id="rp-select" onchange="rpSelected()">
+          <option value="">-- Tap here to find your name --</option>
+        </select>
+        <div id="rp-preview" style="display:none; margin-top:12px; padding:11px; background:var(--surface2); border-radius:var(--radius);">
+          <div style="font-size:12px; color:var(--text2);">Selected:</div>
+          <div id="rp-preview-name" style="font-size:15px; font-weight:600; margin-top:2px;"></div>
+          <div id="rp-preview-meta" style="font-size:12px; color:var(--text2); margin-top:2px;"></div>
+        </div>
+        <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="enterAsRP()">Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HQ LOGIN -->
+<div id="screen-hq-login" class="screen">
+  <div class="page-wrap">
+    <button class="back-btn" onclick="showScreen('screen-landing')">← Back</button>
+    <div class="login-wrap">
+      <div class="login-hero">
+        <div class="login-hero-title">HQ Login</div>
+        <div class="login-hero-sub">Enter your password to continue</div>
+      </div>
+      <div class="card">
+        <label>Password</label>
+        <input type="password" id="hq-password" placeholder="Enter HQ password" onkeydown="if(event.key==='Enter')checkHQPassword()">
+        <div id="hq-pw-error" style="display:none;" class="error-msg">Incorrect password. Please try again.</div>
+        <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="checkHQPassword()">Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RP SCHEDULE -->
+<div id="screen-rp-schedule" class="screen">
+  <div class="app-header">
+    <div>
+      <div class="app-title" id="rp-header-name">My Schedule</div>
+      <div class="app-sub" id="rp-header-meta"></div>
+    </div>
+    <button class="btn btn-sm" onclick="showScreen('screen-landing')">Exit</button>
+  </div>
+  <div class="page-wrap" style="padding-top:16px;">
+    <div class="date-nav">
+      <button class="btn btn-sm" onclick="shiftRPDate(-1)">‹</button>
+      <div class="date-scroll" id="rp-date-scroll"></div>
+      <button class="btn btn-sm" onclick="shiftRPDate(1)">›</button>
+    </div>
+    <div id="rp-tasks-section" style="display:none;">
+      <div class="card">
+        <div class="card-title">📋 Tasks from HQ</div>
+        <div id="rp-tasks-list"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔴 My Busy Time Slots</div>
+      <div style="font-size:13px; color:var(--text2); margin-bottom:12px;">Times when you are in meetings or doing other work</div>
+      <div id="occupied-slots-list"></div>
+      <button class="btn btn-sm" style="margin-top:8px;" onclick="addSlot('occupied')">+ Add Busy Slot</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">My Remarks</div>
+      <div id="remarks-display"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HQ DASHBOARD -->
+<div id="screen-hq-dashboard" class="screen">
+  <div class="app-header">
+    <div>
+      <div class="app-title">ABZ — HQ</div>
+      <div class="app-sub" id="hq-today-label"></div>
+    </div>
+    <button class="btn btn-sm" onclick="showScreen('screen-landing')">Exit</button>
+  </div>
+  <div class="page-wrap" style="padding-top:16px;">
+    <div class="stat-grid" id="hq-stat-grid"></div>
+    <div class="legend">
+      <div class="legend-item"><span class="status-dot dot-green"></span> No tasks assigned</div>
+      <div class="legend-item"><span class="status-dot dot-red"></span> Awaiting response</div>
+      <div class="legend-item"><span class="status-dot dot-orange"></span> RP responded</div>
+    </div>
+    <div class="date-nav">
+      <button class="btn btn-sm" onclick="shiftHQDate(-1)">‹</button>
+      <div class="date-scroll" id="hq-date-scroll"></div>
+      <button class="btn btn-sm" onclick="shiftHQDate(1)">›</button>
+    </div>
+    <div class="filter-row" id="hq-zone-filters"></div>
+    <div class="filter-row" id="hq-type-filters"></div>
+    <div class="card"><div id="hq-rp-list"></div></div>
+    <div class="btn-row" style="margin-top:10px; margin-bottom:10px;">
+      <button class="btn btn-ink" onclick="showScreen('screen-manage-rps')">👥 Manage RPs</button>
+      <button class="btn" onclick="exportData()">⬇ Export to Excel</button>
+    </div>
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-title">📢 Broadcast Task to All RPs</div>
+      <label>Date for this task</label>
+      <input type="date" id="broadcast-date" style="margin-bottom:10px;">
+      <label>Message (Enter key = new line)</label>
+      <textarea id="broadcast-text" placeholder="Type your task here..." style="margin-bottom:10px;min-height:110px;"></textarea>
+      <button class="btn btn-primary btn-full" onclick="broadcastToAll()">📤 Send to All RPs</button>
+      <div id="broadcast-status" style="display:none;margin-top:10px;font-size:13px;color:var(--green);font-weight:500;text-align:center;">✅ Task sent to all RPs!</div>
+    </div>
+    <div id="broadcast-cards-section"></div>
+  </div>
+</div>
+
+<!-- HQ RP DETAIL -->
+<div id="screen-hq-rp-detail" class="screen">
+  <div class="app-header">
+    <div>
+      <div class="app-title" id="detail-rp-name">RP Detail</div>
+      <div class="app-sub" id="detail-rp-meta"></div>
+    </div>
+    <button class="btn btn-sm" onclick="showScreen('screen-hq-dashboard')">← Back</button>
+  </div>
+  <div class="page-wrap" style="padding-top:16px;">
+    <div class="date-nav">
+      <button class="btn btn-sm" onclick="shiftDetailDate(-1)">‹</button>
+      <div class="date-scroll" id="detail-date-scroll"></div>
+      <button class="btn btn-sm" onclick="shiftDetailDate(1)">›</button>
+    </div>
+    <div id="detail-content"></div>
+    <div class="card" id="tasks-section">
+      <div class="card-title">Tasks / Requirements</div>
+      <div id="hq-tasks-list"></div>
+      <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="addHQTask()">+ Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE RPs -->
+<div id="screen-manage-rps" class="screen">
+  <div class="app-header">
+    <div>
+      <div class="app-title">Manage RPs</div>
+      <div class="app-sub" id="manage-rp-count"></div>
+    </div>
+    <button class="btn btn-sm" onclick="showScreen('screen-hq-dashboard')">← Back to Dashboard</button>
+  </div>
+  <div class="page-wrap" style="padding-top:16px;">
+    <div class="card">
+      <div class="card-title">Add a New RP</div>
+      <label>Full name</label>
+      <input type="text" id="new-rp-name" placeholder="e.g. Sunita Verma">
+      <label>Zone</label>
+      <select id="new-rp-zone">
+        <option value="">-- Select zone --</option>
+        <option value="VIVA HQ">VIVA HQ</option>
+        <option value="North">North</option>
+        <option value="South">South</option>
+        <option value="East">East</option>
+        <option value="West">West</option>
+        <option value="Raj">Raj</option>
+      </select>
+      <label>Type</label>
+      <select id="new-rp-type">
+        <option value="">-- Select type --</option>
+        <option value="volunteer">Volunteer</option>
+        <option value="staff">Staff</option>
+      </select>
+      <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="addNewRP()">+ Add RP</button>
+      <div id="add-rp-msg" style="display:none;" class="success-msg"></div>
+      <div id="add-rp-error" style="display:none;" class="error-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Current RP List</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="manage-search" placeholder="Search by name..." oninput="renderManageList()">
+      </div>
+      <div id="manage-rp-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://auxglvqmeveuhqahouej.supabase.co';
+const SUPABASE_KEY='sb_publishable_S3ek9sh1v-56x38sgyLpMA_vUgOHZrN';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const HQ_PASSWORD='uj.viva';
+
+const DEFAULT_RPS=[
+  {name:"Shilpi Mukherjee Ghosh",zone:"VIVA HQ",type:"volunteer"},{name:"Harsh Sadana",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Srabani Biswas",zone:"VIVA HQ",type:"volunteer"},{name:"Priya Ruidas",zone:"West",type:"volunteer"},
+  {name:"Dharmendra Pandey",zone:"VIVA HQ",type:"volunteer"},{name:"Ramesh Dwivedee",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Saswati Ghosh",zone:"VIVA HQ",type:"volunteer"},{name:"Mahesh Bhupalan",zone:"South",type:"volunteer"},
+  {name:"Shatarupa Dutta",zone:"VIVA HQ",type:"staff"},{name:"Vrindha Balagopal",zone:"South",type:"volunteer"},
+  {name:"Urvashi Sharma",zone:"VIVA HQ",type:"volunteer"},{name:"Sunanda Ganguli",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Sobha Menon",zone:"South",type:"volunteer"},{name:"Shyamolima Ghosh",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Shruti Banerjee",zone:"VIVA HQ",type:"volunteer"},{name:"Shilpi Sharma",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Sandhya Iyer",zone:"VIVA HQ",type:"volunteer"},{name:"Sancharita Chatterjee",zone:"South",type:"volunteer"},
+  {name:"Reena Sinha",zone:"South",type:"volunteer"},{name:"Ratnasree Choudhury",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Rajalakshmy Kumar",zone:"South",type:"volunteer"},{name:"Piya Chakravarty",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Neha Phull",zone:"South",type:"volunteer"},{name:"Nandini Seshadri",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Nabanita Sikidar",zone:"VIVA HQ",type:"volunteer"},{name:"Joydrath Dey",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Indrani Roy",zone:"VIVA HQ",type:"volunteer"},{name:"Chaitali Chatterjee",zone:"VIVA HQ",type:"volunteer"},
+  {name:"Arpita Sud",zone:"VIVA HQ",type:"volunteer"},{name:"Anuradha MS",zone:"South",type:"volunteer"},
+  {name:"Usha Hazari",zone:"North",type:"staff"},{name:"Tapan Kumar Dhar",zone:"North",type:"staff"},
+  {name:"Tanusree Ruidas",zone:"South",type:"staff"},{name:"Sumana Biswas Manna",zone:"VIVA HQ",type:"staff"},
+  {name:"Sudipa Pal",zone:"North",type:"staff"},{name:"Suchira Das",zone:"VIVA HQ",type:"staff"},
+  {name:"Shima Joddar",zone:"South",type:"staff"},{name:"Saurav Bisht",zone:"Raj",type:"staff"},
+  {name:"Sapna Sarkar",zone:"West",type:"staff"},{name:"S Madhava Ramanan",zone:"South",type:"staff"},
+  {name:"Roshan Mahalle",zone:"West",type:"staff"},{name:"Rohit Viswakarma",zone:"North",type:"staff"},
+  {name:"Rohit Biswa",zone:"East",type:"staff"},{name:"Ravi Sharma",zone:"Raj",type:"staff"},
+  {name:"Prateek Vyas",zone:"West",type:"staff"},{name:"Karthik Shankar",zone:"VIVA HQ",type:"staff"},
+  {name:"Indrani Mondal",zone:"North",type:"staff"},{name:"Hemant Singh Bohra",zone:"North",type:"staff"},
+  {name:"Harish Mahanand Dhyani",zone:"West",type:"staff"},{name:"Hariom Rai",zone:"North",type:"staff"},
+  {name:"Geeta Harish Dhyani",zone:"West",type:"staff"},{name:"Dilip Tanwar",zone:"East",type:"staff"},
+  {name:"Bornali Pandit",zone:"East",type:"staff"},{name:"Bharani Reddy Koppula",zone:"South",type:"staff"},
+  {name:"Arnab Ghosh",zone:"East",type:"staff"},{name:"Anjali Sharma",zone:"West",type:"staff"},
+  {name:"Aman Baghel",zone:"Raj",type:"staff"}
+];
+
+let RPs=[],currentRP=null,rpCurrentDate=todayStr(),hqCurrentDate=todayStr();
+let detailRP=null,detailCurrentDate=todayStr(),hqZoneFilter='All',hqTypeFilter='All';
+let occupiedSlots=[],availableSlots=[],dbCache={};
+// pendingTasks: tasks being typed but not yet sent {text:''}
+let pendingTasks=[];
+
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function dateLabel(str){const d=new Date(str+'T00:00:00');return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});}
+function isToday(str){return str===todayStr();}
+function getDateRange(c,b,a){const dates=[];const base=new Date(c+'T00:00:00');for(let i=-b;i<=a;i++){const d=new Date(base);d.setDate(d.getDate()+i);dates.push(d.toISOString().slice(0,10));}return dates;}
+function showLoading(t='Loading...'){document.getElementById('loading-overlay').classList.add('show');document.getElementById('loading-text').textContent=t;}
+function hideLoading(){document.getElementById('loading-overlay').classList.remove('show');}
+function ck(n,d){return n+'||'+d;}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+async function dbGet(n,d){
+  const k=ck(n,d);if(dbCache[k])return dbCache[k];
+  try{
+    const res=await sb.from("schedules").select("*").eq("rp_name",n).eq("date",d).maybeSingle();
+    const data=res.data;
+    const r=data?{occupied:data.occupied||[],available:data.available||[],remarks:data.remarks||"",tasks:data.tasks||[]}:{occupied:[],available:[],remarks:"",tasks:[]};
+    dbCache[k]=r;return r;
+  }catch(e){console.error("dbGet error:",e);const r={occupied:[],available:[],remarks:"",tasks:[]};dbCache[k]=r;return r;}
+}
+
+async function dbSet(n,d,p){
+  const k=ck(n,d);dbCache[k]=p;
+  const row={rp_name:n,date:d,occupied:p.occupied,available:p.available,remarks:p.remarks,tasks:p.tasks};
+  try{
+    const res=await sb.from("schedules").select("id").eq("rp_name",n).eq("date",d).maybeSingle();
+    if(res.data){await sb.from("schedules").update(row).eq("rp_name",n).eq("date",d);}
+    else{await sb.from("schedules").insert(row);}
+  }catch(e){console.error("dbSet error:",e);}
+}
+
+async function loadRPs(){
+  try{
+    const res=await sb.from("rp_list").select("*");
+    if(res.data&&res.data.length>0){
+      RPs=res.data.map(function(r){return{name:r.name,zone:r.zone,type:r.type};});
+    }else{
+      RPs=DEFAULT_RPS.map(function(r){return Object.assign({},r);});
+      for(var i=0;i<RPs.length;i++){try{await sb.from("rp_list").upsert({name:RPs[i].name,zone:RPs[i].zone,type:RPs[i].type},{onConflict:"name"});}catch(e2){}}
+    }
+  }catch(e){
+    console.error("loadRPs error:",e);
+    RPs=DEFAULT_RPS.map(function(r){return Object.assign({},r);});
+  }
+}
+
+// dot: green = no tasks, red = any task without response, orange = all sent tasks have responses but not cleared
+function getDotStatus(n,d){
+  const k=ck(n,d);const data=dbCache[k];
+  if(!data||!data.tasks||data.tasks.length===0)return'green';
+  const sent=data.tasks.filter(t=>t.sent);
+  if(sent.length===0)return'green';
+  const allResponded=sent.every(t=>t.response&&t.response.trim()!=='');
+  if(allResponded)return'orange';
+  return'red';
+}
+
+function rebuildRPDropdown(){
+  const sel=document.getElementById("rp-select");
+  sel.innerHTML='<option value="">-- Tap here to find your name --</option>';
+  RPs.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(function(rp){
+    const idx=RPs.findIndex(function(r){return r.name===rp.name;});
+    const opt=document.createElement("option");
+    opt.value=idx;opt.textContent=rp.name+" ("+rp.zone+")";
+    sel.appendChild(opt);
+  });
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='screen-hq-dashboard'){renderHQDashboard();setTimeout(()=>{initBroadcastDate();loadBroadcastCards();},100);}
+  if(id==='screen-rp-schedule')renderRPSchedule();
+  if(id==='screen-manage-rps')renderManageScreen();
+}
+
+function rpSelected(){
+  const sel=document.getElementById('rp-select');const idx=sel.value;
+  if(idx===''){document.getElementById('rp-preview').style.display='none';return;}
+  const rp=RPs[idx];if(!rp)return;
+  document.getElementById('rp-preview').style.display='block';
+  document.getElementById('rp-preview-name').textContent=rp.name;
+  document.getElementById('rp-preview-meta').textContent=rp.zone+' · '+cap(rp.type);
+}
+function enterAsRP(){
+  const idx=document.getElementById('rp-select').value;
+  if(idx===''){alert('Please select your name first.');return;}
+  currentRP=RPs[idx];rpCurrentDate=todayStr();
+  document.getElementById('rp-header-name').textContent=currentRP.name;
+  document.getElementById('rp-header-meta').textContent=currentRP.zone+' · '+cap(currentRP.type);
+  showScreen('screen-rp-schedule');
+}
+function checkHQPassword(){
+  const pw=document.getElementById('hq-password').value;
+  if(pw===HQ_PASSWORD){document.getElementById('hq-pw-error').style.display='none';document.getElementById('hq-password').value='';hqCurrentDate=todayStr();showScreen('screen-hq-dashboard');}
+  else{document.getElementById('hq-pw-error').style.display='block';}
+}
+
+function buildDateScroll(cId,dates,active,fn){
+  const el=document.getElementById(cId);el.innerHTML='';
+  dates.forEach(d=>{
+    const chip=document.createElement('div');chip.className='date-chip'+(d===active?' active':'');
+    chip.textContent=isToday(d)?'Today':dateLabel(d);chip.onclick=()=>fn(d);el.appendChild(chip);
+  });
+  setTimeout(()=>{const a=el.querySelector('.date-chip.active');if(a)a.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});},80);
+}
+
+async function renderRPSchedule(){
+  showLoading('Loading your schedule...');
+  const dates=getDateRange(rpCurrentDate,7,7);
+  buildDateScroll('rp-date-scroll',dates,rpCurrentDate,(d)=>{rpCurrentDate=d;renderRPSchedule();});
+  const data=await dbGet(currentRP.name,rpCurrentDate);
+  occupiedSlots=data.occupied.map(s=>({...s,saved:true,editing:false}));
+  const sentTasks=(data.tasks||[]).filter(t=>t.sent);
+  const tasksSection=document.getElementById('rp-tasks-section');
+  if(sentTasks.length>0){tasksSection.style.display='block';renderRPTasks(sentTasks);}
+  else{tasksSection.style.display='none';}
+  renderSlotsList('occupied-slots-list',occupiedSlots,'occupied');
+  renderRemarksDisplay(data.remarks||'');
+  hideLoading();
+}
+
+function formatTime(t){if(!t)return'?';const[h,m]=t.split(':');const hr=parseInt(h);const ampm=hr>=12?'PM':'AM';const h12=hr%12||12;return h12+':'+(m||'00')+' '+ampm;}
+
+function renderRPTasks(sentTasks){
+  const tasksList=document.getElementById('rp-tasks-list');
+  tasksList.innerHTML='';
+  sentTasks.forEach((task,i)=>{
+    const hasResponse=task.response&&task.response.trim()!=='';
+    const div=document.createElement('div');div.className='rp-task-card';
+    if(hasResponse){
+      div.innerHTML='<div class="task-num-bold">Task '+(i+1)+'</div><div class="rp-task-text">'+task.text+'</div><div class="task-response-collapsed" onclick="openTaskResponse(\'' +task.id+ '\')"><div class="task-response-preview">'+task.response+'</div><span class="edit-icon">edit</span></div>';
+    }else{
+      div.innerHTML='<div class="task-num-bold">Task '+(i+1)+'</div><div class="rp-task-text">'+task.text+'</div><label style="margin-top:10px;">Your response</label><textarea id="rp-task-resp-'+task.id+'" placeholder="Type your response here..." style="margin-bottom:10px;">'+( task.response||'')+'</textarea><button class="btn btn-primary btn-sm" onclick="saveTaskResponse(\'' +task.id+ '\')">Save Response</button>';
+    }
+    tasksList.appendChild(div);
+  });
+}
+
+function openTaskResponse(taskId){
+  const data=dbCache[ck(currentRP.name,rpCurrentDate)];
+  if(!data)return;
+  const task=data.tasks.find(t=>t.id===taskId);
+  if(!task)return;
+  const sentTasks=data.tasks.filter(t=>t.sent);
+  const idx=sentTasks.findIndex(t=>t.id===taskId);
+  const tasksList=document.getElementById('rp-tasks-list');
+  if(tasksList.children[idx]){
+    tasksList.children[idx].innerHTML='<div class="task-num-bold">Task '+(idx+1)+'</div><div class="rp-task-text">'+task.text+'</div><label style="margin-top:10px;">Your response</label><textarea id="rp-task-resp-'+taskId+'" style="margin-bottom:10px;">'+( task.response||'')+'</textarea><button class="btn btn-primary btn-sm" onclick="saveTaskResponse(\'' +taskId+ '\')">Save Response</button>';
+    setTimeout(function(){var el=document.getElementById('rp-task-resp-'+taskId);if(el)el.focus();},100);
+  }
+}
+
+async function saveTaskResponse(taskId){
+  const el=document.getElementById('rp-task-resp-'+taskId);
+  if(!el)return;
+  const response=el.value.trim();
+  if(!response){alert('Please type your response first.');return;}
+  showLoading('Saving response...');
+  const data=await dbGet(currentRP.name,rpCurrentDate);
+  const task=data.tasks.find(t=>t.id===taskId);
+  if(task)task.response=response;
+  await dbSet(currentRP.name,rpCurrentDate,data);
+  hideLoading();
+  renderRPTasks(data.tasks.filter(t=>t.sent));
+}
+
+function renderRemarksDisplay(currentRemarks){
+  const el=document.getElementById('remarks-display');
+  if(!el)return;
+  if(currentRemarks){
+    el.innerHTML='<div class="remarks-collapsed"><div style="flex:1;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:85%;">'+currentRemarks+'</div><span class="edit-icon" onclick="openRemarks()">edit</span></div>';
+  }else{
+    el.innerHTML='<textarea id="rp-remarks" placeholder="Any notes you want to share with HQ today..." style="margin-bottom:10px;"></textarea><button class="btn btn-primary btn-sm" onclick="saveRemarks()">Save Remarks</button>';
+  }
+}
+
+function openRemarks(){
+  const data=dbCache[ck(currentRP.name,rpCurrentDate)];
+  const remarks=data?data.remarks||'':'';
+  const el=document.getElementById('remarks-display');
+  el.innerHTML='<textarea id="rp-remarks" placeholder="Any notes you want to share with HQ today..." style="margin-bottom:10px;">'+remarks+'</textarea><button class="btn btn-primary btn-sm" onclick="saveRemarks()">Save Remarks</button>';
+  setTimeout(function(){var t=document.getElementById('rp-remarks');if(t)t.focus();},100);
+}
+
+async function saveRemarks(){
+  const el=document.getElementById('rp-remarks');
+  const remarks=el?el.value:'';
+  showLoading('Saving...');
+  const data=await dbGet(currentRP.name,rpCurrentDate);
+  data.remarks=remarks;
+  await dbSet(currentRP.name,rpCurrentDate,data);
+  hideLoading();
+  renderRemarksDisplay(remarks);
+}
+
+function shiftRPDate(dir){const d=new Date(rpCurrentDate+'T00:00:00');d.setDate(d.getDate()+dir);rpCurrentDate=d.toISOString().slice(0,10);renderRPSchedule();}
+
+function renderSlotsList(cId,slots,type){
+  const el=document.getElementById(cId);
+  if(slots.length===0){el.innerHTML='<div style="font-size:13px;color:var(--text2);padding:8px 0;">No slots added yet. Tap the button below to add one.</div>';return;}
+  el.innerHTML='';
+  slots.forEach(function(s,i){
+    const div=document.createElement('div');
+    if(s.saved&&!s.editing){
+      div.className='slot-collapsed';
+      div.innerHTML='<div style="flex:1;"><div class="slot-collapsed-text">'+formatTime(s.from)+' - '+formatTime(s.to)+'</div><div class="slot-collapsed-sub">'+(s.task||'No description')+'</div></div><span class="edit-icon" onclick="editSlot('+i+')">✏️</span>';
+    }else{
+      div.className='slot-block slot-occupied';
+      div.innerHTML='<div class="slot-label slot-label-red">Busy Slot</div>'
+        +'<button class="remove-slot-btn" onclick="removeSlot('+i+')">x</button>'
+        +'<div style="display:flex;gap:8px;margin-bottom:7px;flex-wrap:wrap;"><div style="flex:1;min-width:100px;"><label>From</label><input type="time" value="'+(s.from||'')+'" onchange="occupiedSlots['+i+'].from=this.value"></div><div style="flex:1;min-width:100px;"><label>To</label><input type="time" value="'+(s.to||'')+'" onchange="occupiedSlots['+i+'].to=this.value"></div></div>'
+        +'<label>What is the task / meeting?</label><input type="text" placeholder="e.g. Client meeting, Report writing..." value="'+(s.task||'')+'" onchange="occupiedSlots['+i+'].task=this.value" style="margin-bottom:10px;">'
+        +'<button class="btn btn-primary btn-sm" onclick="saveSlot('+i+')">Save Slot</button>';
+    }
+    el.appendChild(div);
+  });
+}
+
+function editSlot(idx){occupiedSlots[idx].editing=true;renderSlotsList("occupied-slots-list",occupiedSlots,"occupied");}
+
+async function saveSlot(idx){
+  const s=occupiedSlots[idx];
+  if(!s.from||!s.to){alert("Please fill in both From and To times.");return;}
+  s.saved=true;s.editing=false;
+  showLoading("Saving...");
+  const data=await dbGet(currentRP.name,rpCurrentDate);
+  data.occupied=occupiedSlots.map(function(sl){return{from:sl.from,to:sl.to,task:sl.task||""};});
+  await dbSet(currentRP.name,rpCurrentDate,data);
+  hideLoading();
+  renderSlotsList("occupied-slots-list",occupiedSlots,"occupied");
+}
+
+function addSlot(type){
+  occupiedSlots.push({from:"",to:"",task:"",saved:false,editing:false});
+  renderSlotsList("occupied-slots-list",occupiedSlots,"occupied");
+  setTimeout(function(){var inputs=document.querySelectorAll("#occupied-slots-list input[type=time]");if(inputs.length)inputs[inputs.length-2].focus();},100);
+}
+
+async function removeSlot(idx){
+  occupiedSlots.splice(idx,1);
+  showLoading("Saving...");
+  const data=await dbGet(currentRP.name,rpCurrentDate);
+  data.occupied=occupiedSlots.map(function(sl){return{from:sl.from,to:sl.to,task:sl.task||""};});
+  await dbSet(currentRP.name,rpCurrentDate,data);
+  hideLoading();
+  renderSlotsList("occupied-slots-list",occupiedSlots,"occupied");
+}
+
+function updateSlot(type,idx,field,val){if(type==="occupied")occupiedSlots[idx][field]=val;}
+
+
+function getCurrentWeekDates(){
+  const today=new Date();const day=today.getDay();
+  const monday=new Date(today);monday.setDate(today.getDate()-(day===0?6:day-1));
+  const dates=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);dates.push(d.toISOString().slice(0,10));}
+  return dates;
+}
+function hasSchedule(rpName,date){
+  const k=ck(rpName,date);const d=dbCache[k];
+  return d&&(d.occupied.length>0||d.remarks||d.tasks.filter(t=>t.sent).length>0);
+}
+function buildWeekIndicator(rpName){
+  const weekDates=getCurrentWeekDates();
+  const days=['M','T','W','T','F','S','S'];
+  const today=todayStr();
+  return weekDates.map((date,i)=>{
+    const active=hasSchedule(rpName,date);
+    const isT=date===today;
+    return `<span class="week-day ${active?'week-day-active':'week-day-inactive'} ${isT?'week-day-today':''}" title="${dateLabel(date)}">${days[i]}</span>`;
+  }).join('');
+}
+
+async function renderHQDashboard(){
+  showLoading('Loading dashboard...');
+  document.getElementById('hq-today-label').textContent='Today: '+dateLabel(todayStr());
+  const dates=getDateRange(hqCurrentDate,7,7);
+  buildDateScroll('hq-date-scroll',dates,hqCurrentDate,(d)=>{hqCurrentDate=d;renderHQDashboard();});
+  const zones=['All','VIVA HQ','North','South','East','West','Raj'];
+  const zf=document.getElementById('hq-zone-filters');zf.innerHTML='';
+  zones.forEach(z=>{const chip=document.createElement('div');chip.className='filter-chip'+(hqZoneFilter===z?' active':'');chip.textContent=z;chip.onclick=()=>{hqZoneFilter=z;renderHQDashboard();};zf.appendChild(chip);});
+  const tf=document.getElementById('hq-type-filters');tf.innerHTML='';
+  ['All','Staff','Volunteer'].forEach(t=>{const chip=document.createElement('div');chip.className='filter-chip'+(hqTypeFilter===t?' active':'');chip.textContent=t;chip.onclick=()=>{hqTypeFilter=t;renderHQDashboard();};tf.appendChild(chip);});
+  let filtered=RPs.filter(rp=>{
+    if(hqZoneFilter!=='All'&&rp.zone!==hqZoneFilter)return false;
+    if(hqTypeFilter==='Staff'&&rp.type!=='staff')return false;
+    if(hqTypeFilter==='Volunteer'&&rp.type!=='volunteer')return false;
+    return true;
+  });
+  const{data:dayData}=await sb.from('schedules').select('*').eq('date',hqCurrentDate);
+  if(dayData){dayData.forEach(row=>{const k=ck(row.rp_name,row.date);dbCache[k]={occupied:row.occupied||[],available:row.available||[],remarks:row.remarks||'',tasks:row.tasks||[]};});}
+  // also fetch full current week data for the week indicators
+  const weekDates=getCurrentWeekDates();
+  const{data:weekData}=await sb.from('schedules').select('*').gte('date',weekDates[0]).lte('date',weekDates[6]);
+  if(weekData){weekData.forEach(row=>{const k=ck(row.rp_name,row.date);if(!dbCache[k]){dbCache[k]={occupied:row.occupied||[],available:row.available||[],remarks:row.remarks||'',tasks:row.tasks||[]};}});}
+  let red=0,orange=0,green=0;
+  filtered.forEach(rp=>{const s=getDotStatus(rp.name,hqCurrentDate);if(s==='red')red++;else if(s==='orange')orange++;else green++;});
+  document.getElementById('hq-stat-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${green}</div><div class="stat-lbl">No Task</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${red}</div><div class="stat-lbl">Awaiting</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${orange}</div><div class="stat-lbl">Responded</div></div>`;
+  const list=document.getElementById('hq-rp-list');
+  if(filtered.length===0){list.innerHTML='<div class="empty-state">No RPs match this filter.</div>';hideLoading();return;}
+  list.innerHTML='';
+  filtered.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(rp=>{
+    const status=getDotStatus(rp.name,hqCurrentDate);
+    const dotClass=status==='red'?'dot-red':status==='orange'?'dot-orange':'dot-green';
+    const d=dbCache[ck(rp.name,hqCurrentDate)];
+    const hasData=d&&(d.occupied.length>0||d.remarks);
+    const sentTasks=d&&d.tasks?d.tasks.filter(t=>t.sent):[];
+    const row=document.createElement('div');row.className='rp-row';
+    row.innerHTML=`<div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="status-dot ${dotClass}"></span>
+        <span class="rp-name">${rp.name}</span>
+        <span class="tag ${rp.type==='volunteer'?'tag-volunteer':'tag-staff'}">${cap(rp.type)}</span>
+      </div>
+      <div class="rp-meta">${rp.zone}
+        ${hasData?` · <span style="color:var(--green);font-weight:500;">${d.occupied.length} busy slot${d.occupied.length!==1?'s':''}</span>`:''}
+        ${sentTasks.length>0?` · <span style="color:var(--primary);font-weight:500;">${sentTasks.length} task${sentTasks.length>1?'s':''} sent</span>`:''}
+        ${status==='red'?' · <span style="color:var(--red);font-weight:500;">Awaiting response</span>':''}
+        ${status==='orange'?' · <span style="color:var(--orange);font-weight:500;">All responded</span>':''}
+      </div>
+      <div class="week-dots">${buildWeekIndicator(rp.name)}</div>
+    </div><span class="chevron">›</span>`;
+    row.onclick=()=>openRPDetail(rp);list.appendChild(row);
+  });
+  hideLoading();
+}
+
+function shiftHQDate(dir){const d=new Date(hqCurrentDate+'T00:00:00');d.setDate(d.getDate()+dir);hqCurrentDate=d.toISOString().slice(0,10);renderHQDashboard();}
+
+function openRPDetail(rp){
+  detailRP=rp;detailCurrentDate=hqCurrentDate;pendingTasks=[];
+  document.getElementById('detail-rp-name').textContent=rp.name;
+  document.getElementById('detail-rp-meta').textContent=rp.zone+' · '+cap(rp.type);
+  showScreen('screen-hq-rp-detail');renderDetailScreen();
+}
+function shiftDetailDate(dir){const d=new Date(detailCurrentDate+'T00:00:00');d.setDate(d.getDate()+dir);detailCurrentDate=d.toISOString().slice(0,10);pendingTasks=[];renderDetailScreen();}
+
+async function renderDetailScreen(){
+  showLoading('Loading...');
+  const dates=getDateRange(detailCurrentDate,7,7);
+  buildDateScroll('detail-date-scroll',dates,detailCurrentDate,(d)=>{detailCurrentDate=d;pendingTasks=[];renderDetailScreen();});
+  const data=await dbGet(detailRP.name,detailCurrentDate);
+  const el=document.getElementById('detail-content');let html='';
+  if(data.occupied.length===0&&!data.remarks){
+    html='<div class="card"><div class="empty-state">No schedule submitted by this Associate for this date.</div></div>';
+  }else{
+    if(data.occupied.length>0){
+      html+='<div class="card"><div class="card-title" style="color:var(--red);">Busy Slots</div>';
+      data.occupied.forEach(s=>{html+=`<div class="slot-block slot-occupied"><div class="slot-label slot-label-red">Busy: ${s.from||'?'} – ${s.to||'?'}</div><div style="font-size:14px;">${s.task||'No description'}</div></div>`;});
+      html+='</div>';
+    }
+    if(data.available.length>0){
+
+    }
+    if(data.remarks){html+=`<div class="card"><div class="card-title">Associate Remarks</div><div style="font-size:14px;line-height:1.6;">${data.remarks}</div></div>`;}
+  }
+  el.innerHTML=html;
+  // render tasks section
+  renderHQTasksList(data);
+  hideLoading();
+}
+
+function renderHQTasksList(data){
+  const container=document.getElementById('hq-tasks-list');
+  container.innerHTML='';
+  const tasks=data?data.tasks||[]:[];
+  // sent tasks
+  const sentTasks=tasks.filter(t=>t.sent);
+  sentTasks.forEach((task,i)=>{
+    const hasResponse=task.response&&task.response.trim()!=='';
+    const div=document.createElement('div');
+    div.className='task-card '+(hasResponse?'task-card-responded':'task-card-sent');
+    div.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="task-num">Task ${i+1} ${hasResponse?'<span style="color:var(--orange);">· Responded</span>':'<span style="color:var(--red);">· Awaiting response</span>'}</div>
+        <button class="btn btn-danger btn-sm" onclick="clearSingleTask('${task.id}')">🗑 Clear</button>
+      </div>
+      <div style="font-size:14px;line-height:1.5;margin-bottom:${hasResponse?'10px':'0'};white-space:pre-wrap;">${task.text}</div>
+      ${hasResponse?`<div class="task-response-box"><div class="task-response-title"><span class="status-dot dot-orange"></span> Associate Response</div><div style="font-size:14px;line-height:1.5;white-space:pre-wrap;">${task.response}</div></div>`:`<div class="task-waiting"><span class="status-dot dot-red"></span> Waiting for Associate to respond...</div>`}`;
+    container.appendChild(div);
+  });
+  // pending (unsent) tasks
+  pendingTasks.forEach((pt,i)=>{
+    const div=document.createElement('div');div.className='task-card';
+    div.innerHTML=`<div class="task-num">New Task</div>
+      <textarea id="pending-task-${i}" placeholder="Type the task or requirement here..." style="margin-bottom:10px;">${pt.text||''}</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="sendPendingTask(${i})">Send Task</button>
+        <button class="btn btn-danger btn-sm" onclick="removePendingTask(${i})">Cancel</button>
+      </div>`;
+    container.appendChild(div);
+  });
+  if(sentTasks.length===0&&pendingTasks.length===0){
+    const empty=document.createElement('div');
+    empty.style.cssText='font-size:13px;color:var(--text2);padding:8px 0 4px;';
+    empty.textContent='No tasks assigned yet. Tap "+ Add Task" below to add one.';
+    container.appendChild(empty);
+  }
+}
+
+function addHQTask(){
+  pendingTasks.push({text:''});
+  const data=dbCache[ck(detailRP.name,detailCurrentDate)]||{tasks:[]};
+  renderHQTasksList(data);
+  // scroll to bottom
+  setTimeout(()=>{const els=document.querySelectorAll('#hq-tasks-list textarea');if(els.length)els[els.length-1].focus();},100);
+}
+
+function removePendingTask(idx){
+  pendingTasks.splice(idx,1);
+  const data=dbCache[ck(detailRP.name,detailCurrentDate)]||{tasks:[]};
+  renderHQTasksList(data);
+}
+
+async function sendPendingTask(idx){
+  const el=document.getElementById('pending-task-'+idx);
+  if(!el||!el.value.trim()){alert('Please type a task first.');return;}
+  const text=el.value.trim();
+  showLoading('Sending task...');
+  const data=await dbGet(detailRP.name,detailCurrentDate);
+  const newTask={id:'task_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),text,sent:true,response:'',sentAt:new Date().toISOString()};
+  data.tasks.push(newTask);
+  await dbSet(detailRP.name,detailCurrentDate,data);
+  pendingTasks.splice(idx,1);
+  hideLoading();renderHQTasksList(data);
+}
+
+async function clearSingleTask(taskId){
+  if(!confirm('Are you sure you want to clear this task?'))return;
+  showLoading('Clearing...');
+  const data=await dbGet(detailRP.name,detailCurrentDate);
+  data.tasks=data.tasks.filter(t=>t.id!==taskId);
+  await dbSet(detailRP.name,detailCurrentDate,data);
+  hideLoading();renderHQTasksList(data);
+}
+
+function renderManageScreen(){
+  document.getElementById('manage-rp-count').textContent=RPs.length+' RPs in the system';
+  document.getElementById('add-rp-msg').style.display='none';
+  document.getElementById('add-rp-error').style.display='none';
+  document.getElementById('new-rp-name').value='';
+  document.getElementById('new-rp-zone').value='';
+  document.getElementById('new-rp-type').value='';
+  renderManageList();
+}
+function renderManageList(){
+  const query=(document.getElementById('manage-search').value||'').toLowerCase();
+  const el=document.getElementById('manage-rp-list');
+  const filtered=RPs.filter(rp=>rp.name.toLowerCase().includes(query)).slice().sort((a,b)=>a.name.localeCompare(b.name));
+  if(filtered.length===0){el.innerHTML='<div class="empty-state">No RPs found.</div>';return;}
+  el.innerHTML='';
+  filtered.forEach(rp=>{
+    const row=document.createElement('div');row.className='rp-row-manage';
+    row.innerHTML=`<div style="flex:1;">
+      <div style="font-size:14px;font-weight:500;">${rp.name}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px;">${rp.zone} · <span class="tag ${rp.type==='volunteer'?'tag-volunteer':'tag-staff'}">${cap(rp.type)}</span></div>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="removeRP('${rp.name.replace(/'/g,"\\'")}')">🗑 Remove</button>`;
+    el.appendChild(row);
+  });
+}
+async function addNewRP(){
+  const name=document.getElementById('new-rp-name').value.trim();
+  const zone=document.getElementById('new-rp-zone').value;
+  const type=document.getElementById('new-rp-type').value;
+  const errEl=document.getElementById('add-rp-error');const msgEl=document.getElementById('add-rp-msg');
+  errEl.style.display='none';msgEl.style.display='none';
+  if(!name){errEl.textContent='Please enter a name.';errEl.style.display='block';return;}
+  if(!zone){errEl.textContent='Please select a zone.';errEl.style.display='block';return;}
+  if(!type){errEl.textContent='Please select a type.';errEl.style.display='block';return;}
+  if(RPs.find(r=>r.name.toLowerCase()===name.toLowerCase())){errEl.textContent='An Associate with this name already exists.';errEl.style.display='block';return;}
+  showLoading('Adding Associate...');
+  RPs.push({name,zone,type});
+  await sb.from('rp_list').upsert({name,zone,type},{onConflict:'name'});
+  rebuildRPDropdown();hideLoading();
+  document.getElementById('new-rp-name').value='';document.getElementById('new-rp-zone').value='';document.getElementById('new-rp-type').value='';
+  document.getElementById('manage-rp-count').textContent=RPs.length+' RPs in the system';
+  msgEl.textContent='✓ '+name+' has been added successfully.';msgEl.style.display='block';
+  setTimeout(()=>msgEl.style.display='none',3000);renderManageList();
+}
+async function removeRP(name){
+  if(!confirm('Are you sure you want to remove '+name+'?'))return;
+  showLoading('Removing...');
+  RPs=RPs.filter(r=>r.name!==name);
+  await sb.from('rp_list').delete().eq('name',name);
+  rebuildRPDropdown();hideLoading();
+  document.getElementById('manage-rp-count').textContent=RPs.length+' RPs in the system';
+  renderManageList();
+}
+
+function initBroadcastDate(){
+  const el=document.getElementById('broadcast-date');
+  if(el&&!el.value) el.value=hqCurrentDate;
+}
+
+async function loadBroadcastCards(){
+  try{
+    const{data}=await sb.from('broadcasts').select('*').order('created_at',{ascending:false});
+    if(data) renderBroadcastCards(data);
+  }catch(e){console.error('loadBroadcastCards error',e);}
+}
+
+function renderBroadcastCards(broadcasts){
+  const el=document.getElementById('broadcast-cards-section');
+  if(!el) return;
+  if(!broadcasts||broadcasts.length===0){el.innerHTML='';return;}
+  el.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">📋 Sent Broadcasts</div>'
+    +broadcasts.map(b=>{
+      return '<div class="card" style="margin-bottom:10px;" id="bc-card-'+b.id+'">'
+        +'<div style="font-size:12px;color:var(--text2);margin-bottom:6px;">📅 '+b.date+'</div>'
+        +'<div id="bc-view-'+b.id+'">'
+        +'<div style="font-size:14px;white-space:pre-wrap;line-height:1.6;margin-bottom:10px;">'+b.text+'</div>'
+        +'<div style="display:flex;gap:6px;">'
+        +'<button class="btn btn-sm" onclick="startEditBroadcast(\''+b.id+'\')">✏️ Edit</button>'
+        +'<button class="btn btn-sm" style="color:var(--red);border-color:var(--red);" onclick="deleteBroadcast(\''+b.id+'\',\''+b.date+'\')">🗑 Delete</button>'
+        +'</div></div>'
+        +'<div id="bc-edit-'+b.id+'" style="display:none;">'
+        +'<textarea id="bc-textarea-'+b.id+'" style="margin-bottom:10px;min-height:100px;">'+b.text+'</textarea>'
+        +'<div style="display:flex;gap:6px;">'
+        +'<button class="btn btn-primary btn-sm" onclick="saveEditBroadcast(\''+b.id+'\',\''+b.date+'\')">💾 Save Changes</button>'
+        +'<button class="btn btn-sm" onclick="cancelEditBroadcast(\''+b.id+'\')">Cancel</button>'
+        +'</div></div>'
+        +'</div>';
+    }).join('');
+}
+
+function startEditBroadcast(id){
+  document.getElementById('bc-view-'+id).style.display='none';
+  document.getElementById('bc-edit-'+id).style.display='block';
+  document.getElementById('bc-textarea-'+id).focus();
+}
+
+function cancelEditBroadcast(id){
+  document.getElementById('bc-view-'+id).style.display='block';
+  document.getElementById('bc-edit-'+id).style.display='none';
+}
+
+async function saveEditBroadcast(id,date){
+  const newText=document.getElementById('bc-textarea-'+id).value.trim();
+  if(!newText){alert('Message cannot be empty.');return;}
+  if(!confirm('Update this broadcast message for ALL RPs?'))return;
+  showLoading('Updating broadcast for all RPs...');
+  await sb.from('broadcasts').update({text:newText}).eq('id',id);
+  for(const rp of RPs){
+    try{
+      delete dbCache[ck(rp.name,date)];
+      const d=await dbGet(rp.name,date);
+      const tasks=(d.tasks||[]).map(t=>t.broadcastId===id?{...t,text:newText}:t);
+      await dbSet(rp.name,date,{...d,tasks});
+    }catch(e){console.error('Edit broadcast error for '+rp.name,e);}
+  }
+  hideLoading();
+  loadBroadcastCards();
+}
+
+async function deleteBroadcast(id,date){
+  if(!confirm('Delete this broadcast from ALL RPs?\n\nThis cannot be undone.'))return;
+  showLoading('Deleting broadcast from all RPs...');
+  await sb.from('broadcasts').delete().eq('id',id);
+  for(const rp of RPs){
+    try{
+      delete dbCache[ck(rp.name,date)];
+      const d=await dbGet(rp.name,date);
+      const tasks=(d.tasks||[]).filter(t=>t.broadcastId!==id);
+      await dbSet(rp.name,date,{...d,tasks});
+    }catch(e){console.error('Delete broadcast error for '+rp.name,e);}
+  }
+  hideLoading();
+  loadBroadcastCards();
+}
+
+async function broadcastToAll(){
+  const text=document.getElementById('broadcast-text').value.trim();
+  const date=document.getElementById('broadcast-date').value||hqCurrentDate;
+  if(!text){alert('Please type a task or message first.');return;}
+  if(!date){alert('Please select a date first.');return;}
+  if(!confirm('Send this task to ALL '+RPs.length+' RPs for '+date+'?'))return;
+  showLoading('Broadcasting to all RPs...');
+  const broadcastId='bc_'+Date.now();
+  // save to broadcasts table
+  await sb.from('broadcasts').insert({id:broadcastId,text:text,date:date});
+  // send to each RP, always clearing cache first
+  for(const rp of RPs){
+    try{
+      delete dbCache[ck(rp.name,date)];
+      const d=await dbGet(rp.name,date);
+      const newTask={id:broadcastId+'_'+rp.name,text:text,sent:true,response:'',responded:false,isBroadcast:true,broadcastId:broadcastId};
+      const tasks=[...(d.tasks||[]),newTask];
+      await dbSet(rp.name,date,{...d,tasks});
+    }catch(e){console.error('Broadcast error for '+rp.name,e);}
+  }
+  hideLoading();
+  document.getElementById('broadcast-text').value='';
+  const status=document.getElementById('broadcast-status');
+  status.style.display='block';
+  setTimeout(()=>status.style.display='none',3000);
+  loadBroadcastCards();
+  renderHQDashboard();
+}
+
+async function exportData(){
+  showLoading('Preparing export...');
+  const{data}=await sb.from('schedules').select('*');
+  let csv='RP Name,Zone,Type,Date,Busy Slots,Remarks,Task Number,Task Text,RP Response\n';
+  if(data){
+    data.forEach(row=>{
+      const rp=RPs.find(r=>r.name===row.rp_name);
+      const occ=(row.occupied||[]).map(s=>`${s.from}-${s.to}:${s.task}`).join('; ');
+      const avl=(row.available||[]).map(s=>`${s.from}-${s.to}`).join('; ');
+      const tasks=row.tasks||[];
+      if(tasks.filter(t=>t.sent).length===0){
+        csv+=`"${row.rp_name}","${rp?rp.zone:''}","${rp?rp.type:''}","${row.date}","${occ}","${avl}","${(row.remarks||'').replace(/"/g,'""')}","","",""\n`;
+      }else{
+        tasks.filter(t=>t.sent).forEach((task,i)=>{
+          csv+=`"${row.rp_name}","${rp?rp.zone:''}","${rp?rp.type:''}","${row.date}","${occ}","${avl}","${(row.remarks||'').replace(/"/g,'""')}","Task ${i+1}","${(task.text||'').replace(/"/g,'""')}","${(task.response||'').replace(/"/g,'""')}"\n`;
+        });
+      }
+    });
+  }
+  hideLoading();
+  const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='RP_Daily_Export.csv';a.click();
+}
+
+async function init(){
+  showLoading('Starting ABZ...');
+  try{await loadRPs();rebuildRPDropdown();}
+  catch(e){console.error(e);RPs=DEFAULT_RPS.map(r=>({...r}));rebuildRPDropdown();}
+  hideLoading();
+}
+init();
+</script>
+</body>
+</html>
